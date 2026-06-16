@@ -1,0 +1,58 @@
+<header>
+  <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+    <rect width="32" height="32" rx="8" fill="#185FA5"/>
+    <path d="M8 10h10M8 14h10M8 18h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M19 17l5 5m0-5l-5 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+  <div>
+    <h1>Extrato Multi-Banco OFX</h1>
+    <p>Consolide extratos, gerencie lançamentos e controle saldos</p>
+  </div>
+  <div class="hdr-right">
+    <button class="theme-btn" (click)="toggleTheme()" title="Alternar tema">
+      {{ theme() === 'dark' ? '☀️' : '🌙' }}
+    </button>
+  </div>
+</header>
+
+<main>
+  <app-upload />
+  <app-history-log />
+
+  @if (hasData()) {
+    <div class="slabel">Resumo consolidado</div>
+    <app-kpi-grid />
+
+    <div class="slabel">Por conta / banco</div>
+    <app-account-cards />
+
+    <div style="margin-top:1.5rem">
+      <div class="tabs">
+        @for (tab of tabs; track tab.id) {
+          <div class="tab" [class.active]="activeTab() === tab.id" (click)="activeTab.set(tab.id)">
+            {{ tab.label }}
+          </div>
+        }
+      </div>
+
+      <div class="tab-panel active">
+        @switch (activeTab()) {
+          @case ('tx')    { <app-transactions /> }
+          @case ('desc')  { <app-by-description /> }
+          @case ('conta') { <app-by-account /> }
+          @case ('saldo') { <app-balance /> }
+          @case ('dia')   { <app-daily /> }
+          @case ('sem')   { <app-weekly /> }
+        }
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-primary" (click)="exporter.exportCSV()">⬇ Exportar CSV (Excel BR)</button>
+      <button class="btn-sec"     (click)="exporter.exportXLSX()">⬇ Exportar .xlsx simples</button>
+      <button class="btn-primary" style="background:#006B3F" (click)="exceljsExporter.exportControleBancario()">⬇ Controle Bancário (.xlsx)</button>
+    </div>
+  }
+</main>
+
+<footer>Processamento 100% local — nenhum dado é enviado para servidores</footer>

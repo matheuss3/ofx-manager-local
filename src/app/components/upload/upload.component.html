@@ -1,0 +1,272 @@
+<div class="upload-area">
+  <div class="upload-header">
+    <h2>📂 Arquivos e fontes</h2>
+    <div class="upload-actions">
+      <button class="btn-sec" (click)="fileInput.click()">＋ Adicionar .ofx</button>
+      <button class="btn-sec" (click)="openManualModal()">✏️ Lançamento manual</button>
+      @if (sources.length) {
+        <button class="btn-sec" (click)="showPagamentoModal.set(true)">💸 Pagamento multi-banco</button>
+      }
+      @if (sources.length) {
+        <button class="btn-danger" (click)="clearAll()">🗑 Limpar tudo</button>
+      }
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  @if (!sources.length) {
+    <div class="drop-zone" [class.drag]="isDragging()"
+         (click)="fileInput.click()"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave()"
+         (drop)="onDrop($event)">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="#bbb" stroke-width="1.3">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p><strong>Arraste arquivos .ofx aqui</strong> — múltiplos bancos e meses suportados</p>
+    </div>
+  }
+
+  <input #fileInput type="file" accept=".ofx,.OFX" multiple hidden (change)="onFileSelect($event)">
+
+  <!-- Progress -->
+  @if (loading()) {
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" [style.width.%]="progress()"></div></div>
+      <div class="prog-lbl">{{ loadMsg() }}</div>
+    </div>
+  }
+
+  <!-- File list -->
+  <div class="file-list">
+
+    <!-- Select all bar -->
+    @if (multiSource) {
+      <div class="sel-bar">
+        <span>Selecionar:</span>
+        <button class="btn-xs" (click)="selectAll(true)">✓ Todas</button>
+        <button class="btn-xs" (click)="selectAll(false)">✕ Nenhuma</button>
+        <span class="sel-count">{{ activeCount }} de {{ sources.length }} contas ativas</span>
+      </div>
+    }
+
+    <!-- Source rows -->
+    @for (s of sources; track s.id) {
+      <div class="file-item" [class.fi-hidden]="isHidden(s.id)">
+        <label class="vis-toggle" [title]="isHidden(s.id) ? 'Incluir na análise' : 'Ocultar da análise'">
+          <input type="checkbox" [checked]="!isHidden(s.id)" (change)="toggleSource(s.id, $any($event.target).checked)">
+          <span class="vis-box"></span>
+        </label>
+        <div class="file-badge" [style.background]="s.color" [style.color]="s.textColor"
+             [style.opacity]="isHidden(s.id) ? '0.4' : '1'"
+             (click)="openLabelModal(s.id)" title="Renomear">
+          {{ s.sigla }}
+        </div>
+        <div class="file-info" [style.opacity]="isHidden(s.id) ? '0.45' : '1'">
+          <div class="file-name">
+            {{ s.label }}
+            <span class="file-label-tag" (click)="openLabelModal(s.id)">🏷 renomear</span>
+            @if (isHidden(s.id)) {
+              <span class="badge-oculto">oculto</span>
+            }
+          </div>
+          <div class="file-meta">
+            {{ srcStats(s.id).active }} transações &nbsp;·&nbsp;
+            <span class="text-green">{{ srcStats(s.id).cred | brl }}</span> &nbsp;·&nbsp;
+            <span class="text-red">{{ srcStats(s.id).deb * -1 | brl }}</span>
+            {{ s.ofxHasBalance ? ' · saldo OFX detectado' : ' · saldo manual' }}
+            @if (linkedManual(s.id).length) {
+              &nbsp;·&nbsp; +{{ linkedManual(s.id).length }} manual(is)
+            }
+          </div>
+        </div>
+        <div class="file-actions">
+          <button class="icon-btn danger" (click)="removeSource(s.id)" title="Remover">✕</button>
+        </div>
+      </div>
+    }
+
+    <!-- Standalone manual rows -->
+
+  </div>
+
+  <!-- Saldo panel -->
+  @if (sources.length) {
+    <div class="saldo-panel">
+      <h4>💰 Saldo inicial das contas</h4>
+      <p class="saldo-hint">Informe o saldo no início do período para calcular o saldo real ao longo do tempo.</p>
+      <div class="saldo-grid">
+        @for (s of sources; track s.id) {
+          <div class="saldo-row">
+            <div class="saldo-dot" [style.background]="s.color"></div>
+            <label [title]="s.label" style="flex:1">
+              {{ s.label }}
+              @if (s.ofxHasBalance) {
+                <span style="font-size:10px;color:var(--green);margin-left:4px">✓ OFX</span>
+              }
+            </label>
+            <span class="saldo-value" [style.color]="s.saldoInicial >= 0 ? 'var(--green)' : 'var(--red)'">
+              {{ s.saldoInicial | brl }}
+            </span>
+            <button class="saldo-edit-btn" (click)="openSaldoModal(s.id)">✏ editar</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <app-period-filter />
+</div>
+
+<!-- ── Label modal ── -->
+@if (showPagamentoModal()) {
+  <app-pagamento-modal
+    (fechar)="showPagamentoModal.set(false)"
+    (salvo)="showPagamentoModal.set(false)" />
+}
+
+@if (showLabelModal()) {
+  <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showLabelModal.set(false)">
+    <div class="modal">
+      <h3>🏷️ Renomear conta</h3>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Nome / label</label>
+          <input type="text" [value]="labelInput()" (input)="labelInput.set($any($event.target).value)" placeholder="Ex: Nubank Pessoal…">
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Cor do banco</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="file-badge" [style.background]="colorInput()" style="color:#fff;pointer-events:none">
+              {{ labelInput().slice(0,3).toUpperCase() }}
+            </div>
+            <span style="font-size:12px;color:var(--muted)">{{ colorInput() }}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            @for (cor of corPaleta; track $index) {
+              <div (click)="colorInput.set(cor)"
+                   [style.background]="cor"
+                   [style.outline]="colorInput() === cor ? '2px solid var(--text)' : 'none'"
+                   [style.outline-offset]="'2px'"
+                   style="width:26px;height:26px;border-radius:6px;cursor:pointer;flex-shrink:0">
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Tipo de conta</label>
+          <select (change)="store.updateAccountType(editingSrcId(), $any($event.target).value)">
+            <option value="corrente"  [selected]="getSource(editingSrcId())?.accountType !== 'investimento'">🏦 Conta corrente</option>
+            <option value="investimento" [selected]="getSource(editingSrcId())?.accountType === 'investimento'">📈 Investimento</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sec" (click)="showLabelModal.set(false)">Cancelar</button>
+        <button class="btn-primary" (click)="saveLabel()">Salvar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Saldo modal ── -->
+@if (showSaldoModal()) {
+  <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showSaldoModal.set(false)">
+    <div class="modal">
+      <h3>💰 Alterar saldo inicial</h3>
+      <p class="modal-desc">{{ saldoDesc() }}</p>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Saldo antes do primeiro lançamento (R$)</label>
+          <input type="number" step="0.01" [value]="saldoInput()" (input)="saldoInput.set(+$any($event.target).value)">
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Motivo (opcional)</label>
+          <input type="text" [value]="saldoReason()" (input)="saldoReason.set($any($event.target).value)" placeholder="Ex: corrigido extrato do mês anterior">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sec" (click)="showSaldoModal.set(false)">Cancelar</button>
+        <button class="btn-primary" (click)="confirmSaldo()">Salvar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Manual entry modal ── -->
+@if (showManualModal()) {
+  <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showManualModal.set(false)">
+    <div class="modal">
+      <h3>✏️ Lançamento manual</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" [value]="manualData()" (input)="manualData.set($any($event.target).value)">
+        </div>
+        <div class="form-group">
+          <label>Tipo *</label>
+          <select [value]="manualTipo()" (change)="manualTipo.set($any($event.target).value)">
+            <option value="CREDIT">Crédito (entrada)</option>
+            <option value="DEBIT">Débito (saída)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Conta *</label>
+          <select [value]="manualConta()" (change)="manualConta.set($any($event.target).value)">
+            <option value="__new">＋ Nova conta (digitar abaixo)</option>
+            @for (s of sources; track s.id) {
+              <option [value]="s.id">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      @if (manualConta() === '__new') {
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da nova conta</label>
+            <input type="text" [value]="manualContaNova()" (input)="manualContaNova.set($any($event.target).value)" placeholder="Ex: Nubank, Carteira…">
+          </div>
+          <div class="form-group">
+            <label>Tipo de conta</label>
+            <select [value]="manualTipoContaNova()" (change)="manualTipoContaNova.set($any($event.target).value)">
+              <option value="corrente">🏦 Conta corrente</option>
+              <option value="investimento">📈 Investimento</option>
+            </select>
+          </div>
+        </div>
+      }
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Valor (R$) *</label>
+          <input type="number" min="0.01" step="0.01" [value]="manualValor()" (input)="manualValor.set(+$any($event.target).value)">
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Descrição *</label>
+          <input type="text" [value]="manualDesc()" (input)="manualDesc.set($any($event.target).value)" placeholder="Descrição do lançamento">
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Observação</label>
+          <textarea [value]="manualObs()" (input)="manualObs.set($any($event.target).value)" placeholder="Nota adicional…"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sec" (click)="showManualModal.set(false)">Cancelar</button>
+        <button class="btn-primary" (click)="addManual()">Adicionar</button>
+      </div>
+    </div>
+  
+</div>
+}

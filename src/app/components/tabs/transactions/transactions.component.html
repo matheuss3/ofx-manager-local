@@ -1,0 +1,75 @@
+<div class="filter-bar">
+  <input type="text" [value]="filters().query" (input)="onQuery($any($event.target).value)" placeholder="Buscar descrição, conta, valor…">
+  <select [value]="filters().tipo" (change)="onTipo($any($event.target).value)">
+    <option value="">Todos os tipos</option>
+    <option value="Crédito">Crédito</option>
+    <option value="Débito">Débito</option>
+    <option value="Manual">Manual</option>
+  </select>
+  <select [value]="filters().contaId" (change)="onConta($any($event.target).value)">
+    <option value="">Todas as contas</option>
+    @for (s of sources(); track s.id) {
+      <option [value]="s.id">{{ s.label }}</option>
+    }
+    <option value="__manual">Lançamentos manuais</option>
+  </select>
+  <input type="date" [value]="filters().de"  (change)="onDe($any($event.target).value)"  title="De">
+  <input type="date" [value]="filters().ate" (change)="onAte($any($event.target).value)" title="Até">
+  <button class="btn-xs" (click)="clearFilters()">Limpar</button>
+  <span class="f-count">{{ countLabel() }}</span>
+</div>
+
+<div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th (click)="sortBy(0)" [class]="sortClass(0)">#<span class="si"></span></th>
+        <th (click)="sortBy(1)" [class]="sortClass(1)">Data<span class="si"></span></th>
+        <th (click)="sortBy(2)" [class]="sortClass(2)">Dia<span class="si"></span></th>
+        <th (click)="sortBy(3)" [class]="sortClass(3)">Conta<span class="si"></span></th>
+        <th (click)="sortBy(4)" [class]="sortClass(4)">Tipo<span class="si"></span></th>
+        <th (click)="sortBy(5)" [class]="sortClass(5)">Descrição<span class="si"></span></th>
+        <th (click)="sortBy(6)" [class]="sortClass(6)" style="text-align:right">Valor<span class="si"></span></th>
+        <th style="width:28px"></th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (!paged().rows.length) {
+        <tr><td colspan="8" class="no-results">Nenhuma transação encontrada</td></tr>
+      }
+      @for (r of paged().rows; track r.id; let i = $index) {
+        <tr>
+          <td style="color:var(--muted)">{{ (page() - 1) * pageSize() + i + 1 }}</td>
+          <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
+          <td style="color:var(--muted)">{{ days[r.date.getDay()] }}</td>
+          <td>
+            <span class="dot" [style.background]="acctColor(r)"></span>{{ acctLbl(r) }}
+          </td>
+          <td><span class="tag" [class]="tipoCls(r)">{{ tipoLbl(r) }}</span></td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" [title]="r.descricao">
+            {{ r.descricao }}
+          </td>
+          <td style="text-align:right" [class.vcr]="r.valor > 0" [class.vdb]="r.valor < 0">
+            {{ r.valor | brl }}
+          </td>
+          <td>
+            <button class="del-row-btn" (click)="deleteRow(r.id)" title="Remover">✕</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="pager">
+  <button (click)="changePage(-1)" [disabled]="page() <= 1">‹</button>
+  <span>{{ pageLabel() }}</span>
+  <button (click)="changePage(1)"  [disabled]="page() >= pages()">›</button>
+  <span style="color:var(--muted)">Linhas:</span>
+  <select [value]="pageSize()" (change)="changeSize($any($event.target).value)">
+    <option value="50">50</option>
+    <option value="100">100</option>
+    <option value="250">250</option>
+    <option value="99999">Todas</option>
+  </select>
+</div>

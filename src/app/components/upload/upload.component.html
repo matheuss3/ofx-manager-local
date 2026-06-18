@@ -4,6 +4,7 @@
     <div class="upload-actions">
       <button class="btn-sec" (click)="fileInput.click()">＋ Adicionar .ofx</button>
       <button class="btn-sec" (click)="openManualModal()">✏️ Lançamento manual</button>
+      <button class="btn-sec" (click)="openNovaContaModal()">🏦 Nova conta</button>
       @if (sources.length) {
         <button class="btn-sec" (click)="showPagamentoModal.set(true)">💸 Pagamento multi-banco</button>
       }
@@ -124,6 +125,58 @@
   <app-pagamento-modal
     (fechar)="showPagamentoModal.set(false)"
     (salvo)="showPagamentoModal.set(false)" />
+}
+
+@if (showNovaContaModal()) {
+  <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showNovaContaModal.set(false)">
+    <div class="modal">
+      <h3>🏦 Nova conta</h3>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Nome da conta *</label>
+          <input type="text" [value]="novaContaNome()" (input)="novaContaNome.set($any($event.target).value)" placeholder="Ex: Carteira, Cofrinho, BTG…">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de conta</label>
+          <select [value]="novaContaTipo()" (change)="novaContaTipo.set($any($event.target).value)">
+            <option value="corrente">🏦 Conta corrente</option>
+            <option value="investimento">📈 Investimento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Saldo inicial (R$)</label>
+          <input type="number" step="0.01" [value]="novaContaSaldo()" (input)="novaContaSaldo.set(+$any($event.target).value)">
+        </div>
+      </div>
+      <div class="form-row s1">
+        <div class="form-group">
+          <label>Cor</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="file-badge" [style.background]="novaContaCor()" style="color:#fff;pointer-events:none">
+              {{ novaContaNome().slice(0,3).toUpperCase() }}
+            </div>
+            <span style="font-size:12px;color:var(--muted)">{{ novaContaCor() }}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            @for (cor of corPaleta; track $index) {
+              <div (click)="novaContaCor.set(cor)"
+                   [style.background]="cor"
+                   [style.outline]="novaContaCor() === cor ? '2px solid var(--text)' : 'none'"
+                   [style.outline-offset]="'2px'"
+                   style="width:26px;height:26px;border-radius:6px;cursor:pointer;flex-shrink:0">
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sec" (click)="showNovaContaModal.set(false)">Cancelar</button>
+        <button class="btn-primary" (click)="criarNovaConta()">✓ Criar conta</button>
+      </div>
+    </div>
+  </div>
 }
 
 @if (showLabelModal()) {

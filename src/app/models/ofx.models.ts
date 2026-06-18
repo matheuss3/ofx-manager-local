@@ -24,9 +24,16 @@ export interface Transaction {
   source: Source | null;
   linkedSourceId: string | null;
   acctLabel?: string;
+  tag?: string | null;
 }
 
 export type AccountType = 'corrente' | 'investimento';
+
+export interface TagInfo {
+  id: string;
+  label: string;
+  color: string;
+}
 
 export interface Source {
   id: string;

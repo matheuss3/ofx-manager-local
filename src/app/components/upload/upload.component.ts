@@ -39,6 +39,11 @@ export class UploadComponent {
   protected showSaldoModal  = signal(false);
   protected showManualModal  = signal(false);
   protected showPagamentoModal = signal(false);
+  protected showNovaContaModal = signal(false);
+  protected novaContaNome  = signal('');
+  protected novaContaTipo  = signal<AccountType>('corrente');
+  protected novaContaSaldo = signal(0);
+  protected novaContaCor   = signal('#185FA5');
 
   // label modal state
   protected editingSrcId = signal('');
@@ -262,5 +267,43 @@ export class UploadComponent {
       acctLabel: src?.label ?? 'Manual',
     });
     this.showManualModal.set(false);
+  }
+
+  // ── Nova conta (sem lançamento) ───────────────────────────────
+  openNovaContaModal() {
+    this.novaContaNome.set('');
+    this.novaContaTipo.set('corrente');
+    this.novaContaSaldo.set(0);
+    this.novaContaCor.set(this.bankDb.colorForIndex(this.sources.length));
+    this.showNovaContaModal.set(true);
+  }
+
+  criarNovaConta() {
+    const nome = this.novaContaNome().trim();
+    if (!nome) { alert('Informe o nome da conta.'); return; }
+
+    const src: Source = {
+      id: `src-manual-${Date.now()}`,
+      label: nome,
+      color: this.novaContaCor(),
+      textColor: '#fff',
+      sigla: nome.slice(0, 3).toUpperCase(),
+      meta: { bankId: '', acctId: '', acctType: '', dtStart: '', dtEnd: '', currency: 'BRL' },
+      rows: [],
+      saldoInicial: this.novaContaSaldo(),
+      ofxHasBalance: false,
+      fileName: '',
+      accountType: this.novaContaTipo(),
+    };
+    this.store.addSource(src);
+
+    this.store.pushLog({
+      type: 'saldo', icon: '🏦',
+      title: `Conta criada: ${nome}`,
+      meta: `${this.novaContaTipo() === 'investimento' ? '📈 Investimento' : '🏦 Corrente'} · saldo inicial: ${this.store.fBRL(this.novaContaSaldo())}`,
+      undo: () => this.store.removeSource(src.id),
+    });
+
+    this.showNovaContaModal.set(false);
   }
 }

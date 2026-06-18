@@ -1,10 +1,19 @@
 import { computed, Injectable, signal } from '@angular/core';
 import {
-  AccountGroup, DescGroup, DayGroup, WeekGroup, AccountType,
+  AccountGroup, DescGroup, DayGroup, WeekGroup, AccountType, TagInfo,
   LogEntry, PeriodFilter, Source, Transaction, TxFilters,
 } from '../models/ofx.models';
 
 const MAX_LOG = 5;
+
+const DEFAULT_TAGS: TagInfo[] = [
+  { id: 'transferencia', label: 'Transferência', color: '#185FA5' },
+  { id: 'pagamento',     label: 'Pagamento',     color: '#D85A30' },
+  { id: 'recebimento',   label: 'Recebimento',   color: '#1D9E75' },
+  { id: 'especial',      label: 'Especial',      color: '#820AD1' },
+  { id: 'imposto',       label: 'Imposto',       color: '#BA7517' },
+  { id: 'folha',         label: 'Folha de pagamento', color: '#0C447C' },
+];
 const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
 @Injectable({ providedIn: 'root' })
@@ -16,6 +25,7 @@ export class StoreService {
   readonly hiddenIds  = signal<Set<string>>(new Set());
   readonly period     = signal<PeriodFilter>({ start: null, end: null });
   readonly log        = signal<LogEntry[]>([]);
+  readonly tags       = signal<TagInfo[]>([...DEFAULT_TAGS]);
 
   readonly txFilters = signal<TxFilters>({
     query: '', tipo: '', contaId: '', de: '', ate: '',
@@ -306,6 +316,33 @@ export class StoreService {
     this.deletedIds.set(new Set());
     this.hiddenIds.set(new Set());
     this.log.set([]);
+  }
+
+  // ── Tags ─────────────────────────────────────────────────────
+  addTag(label: string, color: string) {
+    const id = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
+    this.tags.update(list => list.some(t => t.id === id) ? list : [...list, { id, label, color }]);
+    return id;
+  }
+
+  removeTag(id: string) {
+    this.tags.update(list => list.filter(t => t.id !== id));
+    // Clear tag from any transactions using it
+    this.setTagOnRows(id, null);
+  }
+
+  setRowTag(rowId: string, tagId: string | null) {
+    this.sources.update(list => list.map(s => ({
+      ...s,
+      rows: s.rows.map(r => r.id === rowId ? { ...r, tag: tagId } : r),
+    })));
+  }
+
+  private setTagOnRows(tagId: string, newVal: string | null) {
+    this.sources.update(list => list.map(s => ({
+      ...s,
+      rows: s.rows.map(r => r.tag === tagId ? { ...r, tag: newVal } : r),
+    })));
   }
 
   // ── Helpers ──────────────────────────────────────────────────

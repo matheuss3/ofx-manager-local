@@ -11,7 +11,6 @@
     @for (s of sources(); track s.id) {
       <option [value]="s.id">{{ s.label }}</option>
     }
-    <option value="__manual">Lançamentos manuais</option>
   </select>
   <input type="date" [value]="filters().de"  (change)="onDe($any($event.target).value)"  title="De">
   <input type="date" [value]="filters().ate" (change)="onAte($any($event.target).value)" title="Até">
@@ -30,12 +29,13 @@
         <th (click)="sortBy(4)" [class]="sortClass(4)">Tipo<span class="si"></span></th>
         <th (click)="sortBy(5)" [class]="sortClass(5)">Descrição<span class="si"></span></th>
         <th (click)="sortBy(6)" [class]="sortClass(6)" style="text-align:right">Valor<span class="si"></span></th>
+        <th style="width:110px">Etiqueta</th>
         <th style="width:28px"></th>
       </tr>
     </thead>
     <tbody>
       @if (!paged().rows.length) {
-        <tr><td colspan="8" class="no-results">Nenhuma transação encontrada</td></tr>
+        <tr><td colspan="9" class="no-results">Nenhuma transação encontrada</td></tr>
       }
       @for (r of paged().rows; track r.id; let i = $index) {
         <tr>
@@ -51,6 +51,17 @@
           </td>
           <td style="text-align:right" [class.vcr]="r.valor > 0" [class.vdb]="r.valor < 0">
             {{ r.valor | brl }}
+          </td>
+          <td>
+            @if (tagInfo(r)) {
+              <span class="tag-pill" [style.background]="tagInfo(r)!.color + '22'" [style.color]="tagInfo(r)!.color"
+                    (click)="toggleTagMenu(r.id, $event)" style="cursor:pointer">
+                {{ tagInfo(r)!.label }}
+              </span>
+            } @else {
+              <button class="tag-add-btn" (click)="toggleTagMenu(r.id, $event)">+ etiqueta</button>
+            }
+
           </td>
           <td>
             <button class="del-row-btn" (click)="deleteRow(r.id)" title="Remover">✕</button>
@@ -73,3 +84,16 @@
     <option value="99999">Todas</option>
   </select>
 </div>
+
+<!-- Tag dropdown — rendered once, positioned via fixed coords -->
+@if (tagMenuOpen()) {
+  <div class="tag-menu-backdrop" (click)="toggleTagMenu(tagMenuOpen()!, $event)"></div>
+  <div class="tag-menu" [style.top.px]="tagMenuPos().top" [style.left.px]="tagMenuPos().left">
+    @for (t of tags(); track t.id) {
+      <div class="tag-menu-item" (click)="setTag(tagMenuOpen()!, t.id)">
+        <span class="tag-menu-dot" [style.background]="t.color"></span>{{ t.label }}
+      </div>
+    }
+    <div class="tag-menu-item tag-menu-clear" (click)="setTag(tagMenuOpen()!, null)">✕ remover etiqueta</div>
+  </div>
+}

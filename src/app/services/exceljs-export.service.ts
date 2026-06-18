@@ -261,8 +261,9 @@ export class ExcelJsExportService {
       const label    = src?.label ?? g.label;
       const bankColor = (src?.color ?? g.color).replace('#', 'FF');
       // Split OFX vs manual rows
-      const ofxRows  = g.rows.filter((r: Transaction) => !r.isManual);
-      const manRows  = g.rows.filter((r: Transaction) =>  r.isManual);
+      // Rows with a tag are treated as manual too, even if they came from OFX
+      const ofxRows  = g.rows.filter((r: Transaction) => !r.isManual && !r.tag);
+      const manRows  = g.rows.filter((r: Transaction) =>  r.isManual ||  r.tag);
       const ofxDeb   = ofxRows.reduce((a: number, r: Transaction) => r.valor < 0 ? a + r.valor : a, 0);
       const ofxCre   = ofxRows.reduce((a: number, r: Transaction) => r.valor > 0 ? a + r.valor : a, 0);
       const manDeb   = manRows.reduce((a: number, r: Transaction) => r.valor < 0 ? a + r.valor : a, 0);

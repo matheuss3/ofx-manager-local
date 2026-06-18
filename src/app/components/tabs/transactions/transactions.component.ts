@@ -1,18 +1,20 @@
 import { Component, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { StoreService } from '../../../services/store.service';
 import { BrlPipe } from '../../../pipes/brl.pipe';
+import { Transaction } from '../../../models/ofx.models';
+import { signal } from '@angular/core';
 
 const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [CommonModule, BrlPipe],
+  imports: [DatePipe, BrlPipe],
   templateUrl: './transactions.component.html',
 })
 export class TransactionsComponent {
-  protected store: StoreService = inject(StoreService);
+  private  store:    StoreService = inject(StoreService);
   protected days   = DAYS;
 
   protected filters  = this.store.txFilters;
@@ -23,8 +25,12 @@ export class TransactionsComponent {
   protected total    = computed(() => this.store.filteredTx().length);
   protected allLen   = computed(() => this.store.view().length);
   protected pages    = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
+  protected sources  = computed(() => this.store.sources());
+  protected tags     = computed(() => this.store.tags());
 
-  protected sources = computed(() => this.store.sources());
+  // Tag dropdown open state — only one open at a time
+  protected tagMenuOpen = signal<string | null>(null);
+  protected tagMenuPos  = signal<{ top: number; left: number }>({ top: 0, left: 0 });
 
   protected countLabel = computed(() => {
     const t = this.total(), a = this.allLen();
@@ -53,14 +59,34 @@ export class TransactionsComponent {
     return s.dir === 1 ? 'sa' : 'sd';
   }
 
-  tipoCls(r: any)  { return r.isManual ? 'mn' : r.valor > 0 ? 'cr' : 'db'; }
-  tipoLbl(r: any)  { return r.isManual ? 'Manual' : r.valor > 0 ? 'Crédito' : 'Débito'; }
-  acctLbl(r: any)  { return r.source?.label ?? r.acctLabel ?? 'Manual'; }
-  acctColor(r: any){ return r.source?.color ?? '#BA7517'; }
+  tipoCls(r: Transaction)  { return r.isManual ? 'mn' : r.valor > 0 ? 'cr' : 'db'; }
+  tipoLbl(r: Transaction)  { return r.isManual ? 'Manual' : r.valor > 0 ? 'Crédito' : 'Débito'; }
+  acctLbl(r: Transaction)  { return r.source?.label ?? r.acctLabel ?? 'Manual'; }
+  acctColor(r: Transaction){ return r.source?.color ?? '#BA7517'; }
+
+  tagInfo(r: Transaction) {
+    if (!r.tag) return null;
+    return this.tags().find(t => t.id === r.tag) ?? null;
+  }
+
+  toggleTagMenu(rowId: string, event: MouseEvent) {
+    if (this.tagMenuOpen() === rowId) {
+      this.tagMenuOpen.set(null);
+      return;
+    }
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    this.tagMenuPos.set({ top: rect.bottom + 4, left: rect.left });
+    this.tagMenuOpen.set(rowId);
+  }
+
+  setTag(rowId: string, tagId: string | null) {
+    this.store.setRowTag(rowId, tagId);
+    this.tagMenuOpen.set(null);
+  }
 
   deleteRow(id: string) {
-    const all = this.store.all();
-    const row = (all as any[]).find((r:any) => r.id === id);
+    const row = this.store.all().find((r: Transaction) => r.id === id);
     if (!row) return;
     this.store.pushLog({
       type: 'delete', icon: '🗑',

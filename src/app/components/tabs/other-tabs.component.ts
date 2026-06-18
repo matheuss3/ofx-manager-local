@@ -1,15 +1,16 @@
-// ─── Daily ────────────────────────────────────────────────────
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { StoreService } from '../../services/store.service';
 import { BrlPipe } from '../../pipes/brl.pipe';
+import { Transaction, DayGroup, WeekGroup, DescGroup, AccountGroup } from '../../models/ofx.models';
 
 const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
+// ─── Daily ────────────────────────────────────────────────────
 @Component({
   selector: 'app-daily',
   standalone: true,
-  imports: [CommonModule, BrlPipe],
+  imports: [DatePipe, BrlPipe],
   template: `
     <div class="tbl-wrap">
       <table>
@@ -38,19 +39,29 @@ const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   `,
 })
 export class DailyComponent {
-  protected store: StoreService = inject(StoreService);
-  protected days  = DAYS;
-  private   col   = signal(0);
-  private   dir   = signal<1|-1>(1);
+  private store: StoreService = inject(StoreService);
+  protected days = DAYS;
+  private col = signal(0);
+  private dir = signal<1|-1>(1);
 
-  sort(c: number) { this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : 1); this.col.set(c); }
-  sc(c: number)   { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
+  sort(c: number) {
+    this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : 1);
+    this.col.set(c);
+  }
+  sc(c: number) { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
 
-  protected sorted() {
-    return [...(this.store.dayGroups() as any[])].sort((a:any, b:any) => {
-      const pairs: [any,any][] = [[a.date,b.date],[DAYS[a.date.getDay()],DAYS[b.date.getDay()]],[a.n,b.n],[a.cred,b.cred],[a.deb,b.deb],[a.cred+a.deb,b.cred+b.deb]];
-      const [va,vb] = pairs[this.col()] ?? [a.date,b.date];
-      return (va<vb?-1:va>vb?1:0) * this.dir();
+  protected sorted(): DayGroup[] {
+    return [...this.store.dayGroups()].sort((a: DayGroup, b: DayGroup) => {
+      const pairs: [any,any][] = [
+        [a.date, b.date],
+        [DAYS[a.date.getDay()], DAYS[b.date.getDay()]],
+        [a.n, b.n],
+        [a.cred, b.cred],
+        [a.deb, b.deb],
+        [a.cred+a.deb, b.cred+b.deb],
+      ];
+      const [va, vb] = pairs[this.col()] ?? [a.date, b.date];
+      return (va < vb ? -1 : va > vb ? 1 : 0) * this.dir();
     });
   }
 }
@@ -59,7 +70,7 @@ export class DailyComponent {
 @Component({
   selector: 'app-weekly',
   standalone: true,
-  imports: [CommonModule, BrlPipe],
+  imports: [BrlPipe],
   template: `
     <div class="tbl-wrap">
       <table>
@@ -91,23 +102,28 @@ export class DailyComponent {
   `,
 })
 export class WeeklyComponent {
-  protected store: StoreService = inject(StoreService);
-  private   col   = signal(0);
-  private   dir   = signal<1|-1>(1);
+  private store: StoreService = inject(StoreService);
+  private col = signal(0);
+  private dir = signal<1|-1>(1);
 
-  sort(c: number) { this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : 1); this.col.set(c); }
-  sc(c: number)   { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
+  sort(c: number) {
+    this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : 1);
+    this.col.set(c);
+  }
+  sc(c: number) { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
 
   protected pct(deb: number): number {
-    const total = this.store.view().filter((r:any)=>r.valor<0).reduce((a:number,r:any)=>a+r.valor,0);
-    return total ? Math.min(Math.abs(deb/total)*100, 100) : 0;
+    const total = this.store.view().reduce((a: number, r: Transaction) => r.valor < 0 ? a + r.valor : a, 0);
+    return total ? Math.min(Math.abs(deb / total) * 100, 100) : 0;
   }
 
-  protected sorted() {
-    return [...(this.store.weekGroups() as any[])].sort((a:any, b:any) => {
-      const pairs: [any,any][] = [[a.key,b.key],[a.n,b.n],[a.cred,b.cred],[a.deb,b.deb],[a.cred+a.deb,b.cred+b.deb]];
-      const [va,vb] = pairs[this.col()] ?? [a.key,b.key];
-      return (va<vb?-1:va>vb?1:0) * this.dir();
+  protected sorted(): WeekGroup[] {
+    return [...this.store.weekGroups()].sort((a: WeekGroup, b: WeekGroup) => {
+      const pairs: [any,any][] = [
+        [a.key, b.key], [a.n, b.n], [a.cred, b.cred], [a.deb, b.deb], [a.cred+a.deb, b.cred+b.deb],
+      ];
+      const [va, vb] = pairs[this.col()] ?? [a.key, b.key];
+      return (va < vb ? -1 : va > vb ? 1 : 0) * this.dir();
     });
   }
 }
@@ -116,7 +132,7 @@ export class WeeklyComponent {
 @Component({
   selector: 'app-by-description',
   standalone: true,
-  imports: [CommonModule, BrlPipe],
+  imports: [DatePipe, BrlPipe],
   template: `
     <div class="filter-bar">
       <input type="text" [value]="q()" (input)="q.set($any($event.target).value)" placeholder="Buscar descrição…">
@@ -148,7 +164,7 @@ export class WeeklyComponent {
               <span style="font-size:11px;color:var(--muted)">{{ pct(g).toFixed(1) }}%</span>
             </td>
             <td style="text-align:center">
-              <button class="exp-btn" (click)="toggle(gi)">{{ expanded()===gi ? '▼' : '▶' }}</button>
+              <button class="exp-btn" (click)="toggle(gi)"><span class="msi">{{ expanded()===gi ? 'expand_more' : 'chevron_right' }}</span></button>
             </td>
           </tr>
           @if (expanded() === gi) {
@@ -176,36 +192,41 @@ export class WeeklyComponent {
   `,
 })
 export class ByDescriptionComponent {
-  protected store    = inject(StoreService);
+  private store: StoreService = inject(StoreService);
   protected q        = signal('');
   protected tipo     = signal('');
   protected expanded = signal<number|null>(null);
   private   col      = signal(2);
   private   dir      = signal<1|-1>(-1);
 
-  sort(c: number) { this.dir.set(this.col()===c?(this.dir()===1?-1:1) as 1|-1:-1); this.col.set(c); }
-  sc(c: number)   { return this.col()===c?(this.dir()===1?'sa':'sd'):''; }
-  toggle(i: number){ this.expanded.set(this.expanded()===i?null:i); }
+  sort(c: number) {
+    this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : -1);
+    this.col.set(c);
+  }
+  sc(c: number)    { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
+  toggle(i: number){ this.expanded.set(this.expanded() === i ? null : i); }
 
-  protected pct(g: any): number {
-    const v = this.store.view();
-    const tIn  = v.filter((r:any)=>r.valor>0).reduce((a:number,r:any)=>a+r.valor,0);
-    const tOut = v.filter((r:any)=>r.valor<0).reduce((a:number,r:any)=>a+r.valor,0);
-    return Math.min(g.total>=0 ? (tIn?Math.abs(g.cred/tIn)*100:0) : (tOut?Math.abs(g.deb/tOut)*100:0), 100);
+  protected pct(g: DescGroup): number {
+    const v    = this.store.view();
+    const tIn  = v.reduce((a: number, r: Transaction) => r.valor > 0 ? a + r.valor : a, 0);
+    const tOut = v.reduce((a: number, r: Transaction) => r.valor < 0 ? a + r.valor : a, 0);
+    return Math.min(g.total >= 0 ? (tIn ? Math.abs(g.cred / tIn) * 100 : 0) : (tOut ? Math.abs(g.deb / tOut) * 100 : 0), 100);
   }
 
-  protected filtered() {
+  protected filtered(): DescGroup[] {
     const q = this.q().toLowerCase(), t = this.tipo();
-    let data = (this.store.descGroups() as any[]).filter((g:any) => {
+    let data = this.store.descGroups().filter((g: DescGroup) => {
       if (q && !g.label.toLowerCase().includes(q)) return false;
       if (t === 'cr' && g.cred === 0) return false;
       if (t === 'db' && g.deb  === 0) return false;
       return true;
     });
-    return (data as any[]).sort((a:any,b:any) => {
-      const pairs: [any,any][] = [[a.label,b.label],[a.n,b.n],[a.total,b.total],[a.cred,b.cred],[a.deb,b.deb]];
-      const [va,vb] = pairs[this.col()] ?? [a.total,b.total];
-      return (va<vb?-1:va>vb?1:0) * this.dir();
+    return data.sort((a: DescGroup, b: DescGroup) => {
+      const pairs: [any,any][] = [
+        [a.label, b.label], [a.n, b.n], [a.total, b.total], [a.cred, b.cred], [a.deb, b.deb],
+      ];
+      const [va, vb] = pairs[this.col()] ?? [a.total, b.total];
+      return (va < vb ? -1 : va > vb ? 1 : 0) * this.dir();
     });
   }
 }
@@ -214,7 +235,7 @@ export class ByDescriptionComponent {
 @Component({
   selector: 'app-by-account',
   standalone: true,
-  imports: [CommonModule, BrlPipe],
+  imports: [DatePipe, BrlPipe],
   template: `
     <div class="tbl-wrap"><table class="grp-tbl">
       <thead><tr>
@@ -239,7 +260,7 @@ export class ByDescriptionComponent {
               <span style="font-size:11px;color:var(--muted)">{{ pct(g.deb).toFixed(1) }}%</span>
             </td>
             <td style="text-align:center">
-              <button class="exp-btn" (click)="toggle(gi)">{{ expanded()===gi?'▼':'▶' }}</button>
+              <button class="exp-btn" (click)="toggle(gi)"><span class="msi">{{ expanded()===gi ? 'expand_more' : 'chevron_right' }}</span></button>
             </td>
           </tr>
           @if (expanded() === gi) {
@@ -267,25 +288,30 @@ export class ByDescriptionComponent {
   `,
 })
 export class ByAccountComponent {
-  protected store    = inject(StoreService);
+  private store: StoreService = inject(StoreService);
   protected expanded = signal<number|null>(null);
   private   col      = signal(2);
   private   dir      = signal<1|-1>(-1);
 
-  sort(c: number) { this.dir.set(this.col()===c?(this.dir()===1?-1:1) as 1|-1:-1); this.col.set(c); }
-  sc(c: number)   { return this.col()===c?(this.dir()===1?'sa':'sd'):''; }
-  toggle(i: number){ this.expanded.set(this.expanded()===i?null:i); }
+  sort(c: number) {
+    this.dir.set(this.col() === c ? (this.dir() === 1 ? -1 : 1) as 1|-1 : -1);
+    this.col.set(c);
+  }
+  sc(c: number)    { return this.col() === c ? (this.dir() === 1 ? 'sa' : 'sd') : ''; }
+  toggle(i: number){ this.expanded.set(this.expanded() === i ? null : i); }
 
   protected pct(deb: number): number {
-    const total = this.store.view().filter((r:any)=>r.valor<0).reduce((a:number,r:any)=>a+r.valor,0);
-    return total ? Math.min(Math.abs(deb/total)*100,100) : 0;
+    const total = this.store.view().reduce((a: number, r: Transaction) => r.valor < 0 ? a + r.valor : a, 0);
+    return total ? Math.min(Math.abs(deb / total) * 100, 100) : 0;
   }
 
-  protected sorted() {
-    return [...(this.store.accountGroups() as any[])].sort((a:any,b:any) => {
-      const pairs: [any,any][] = [[a.label,b.label],[a.n,b.n],[a.cred,b.cred],[a.deb,b.deb],[a.cred+a.deb,b.cred+b.deb]];
-      const [va,vb] = pairs[this.col()] ?? [a.cred,b.cred];
-      return (va<vb?-1:va>vb?1:0) * this.dir();
+  protected sorted(): AccountGroup[] {
+    return [...this.store.accountGroups()].sort((a: AccountGroup, b: AccountGroup) => {
+      const pairs: [any,any][] = [
+        [a.label, b.label], [a.n, b.n], [a.cred, b.cred], [a.deb, b.deb], [a.cred+a.deb, b.cred+b.deb],
+      ];
+      const [va, vb] = pairs[this.col()] ?? [a.cred, b.cred];
+      return (va < vb ? -1 : va > vb ? 1 : 0) * this.dir();
     });
   }
 }

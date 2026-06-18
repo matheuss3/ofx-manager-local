@@ -34,7 +34,7 @@ const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
               </td>
               <td style="text-align:right;color:var(--muted)">
                 @if (g.saldoDesconhecido) {
-                  <span style="color:var(--amber)">⚠ não calculado</span>
+                  <span style="color:var(--amber)"><span class="msi">warning</span> não calculado</span>
                 } @else {
                   {{ g.saldoInicial | brl }}
                   @if (store.period().start) {
@@ -48,7 +48,7 @@ const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
                 {{ g.cred + g.deb | brl }}
               </td>
               @if (g.saldoDesconhecido) {
-                <td style="text-align:right;color:var(--amber);font-weight:600">⚠</td>
+                <td style="text-align:right;color:var(--amber);font-weight:600"><span class="msi">warning</span></td>
               } @else {
                 <td style="text-align:right;font-weight:600"
                     [class.text-green]="(g.saldoInicial + g.cred + g.deb) >= 0"
@@ -57,7 +57,10 @@ const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
                 </td>
               }
               <td style="text-align:center">
-                <button class="exp-btn" (click)="toggle(gi)">{{ expanded() === gi ? '▼ fechar' : '▶' }}</button>
+                <button class="exp-btn" (click)="toggle(gi)">
+                  <span class="msi">{{ expanded() === gi ? 'expand_more' : 'chevron_right' }}</span>
+                  @if (expanded() === gi) { fechar }
+                </button>
               </td>
             </tr>
 

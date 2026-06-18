@@ -21,7 +21,7 @@ import { BrlPipe } from '../../pipes/brl.pipe';
           </div>
           @if (g.saldoDesconhecido) {
             <div class="balance-highlight" style="color:var(--amber)">
-              ⚠ saldo não calculado
+              <span class="msi">warning</span> saldo não calculado
               <span style="font-size:10px;font-weight:400">(informe saldo inicial)</span>
             </div>
           } @else {

@@ -32,7 +32,7 @@ import { BrlPipe } from '../../pipes/brl.pipe';
       <div class="kpi">
         <div class="kpi-lbl">Saldo total atual</div>
         @if (t().totalSaldo === null) {
-          <div class="kpi-val" style="color:var(--amber);font-size:13px">⚠ não calculado</div>
+          <div class="kpi-val" style="color:var(--amber);font-size:13px"><span class="msi">warning</span> não calculado</div>
         } @else {
           <div class="kpi-val" [class.green]="t().totalSaldo! >= 0" [class.red]="t().totalSaldo! < 0">{{ t().totalSaldo | brl }}</div>
         }
@@ -77,7 +77,7 @@ export class KpiGridComponent {
     const nCr   = v.filter(r => r.valor > 0).length;
     const nDb   = v.filter(r => r.valor < 0).length;
     const days  = new Set(v.map(r => r.date.toLocaleDateString('pt-BR'))).size;
-    const fBRL  = (n: number | null) => n === null ? '⚠ não calculado' : this.store.fBRL(n);
+    const fBRL  = (n: number | null) => n === null ? 'não calculado' : this.store.fBRL(n);
     return [
       { label: 'Saldo Conta Corrente',  value: fBRL(t.saldoCC),      highlight: 'cc' },
       { label: 'Saldo Investimentos',   value: fBRL(t.saldoInvest),  highlight: 'inv' },

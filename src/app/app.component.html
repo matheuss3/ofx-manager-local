@@ -10,7 +10,7 @@
   </div>
   <div class="hdr-right">
     <button class="theme-btn" (click)="toggleTheme()" title="Alternar tema">
-      {{ theme() === 'dark' ? '☀️' : '🌙' }}
+      <span class="msi">{{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</span>
     </button>
   </div>
 </header>

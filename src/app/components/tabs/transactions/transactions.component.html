@@ -64,7 +64,7 @@
 
           </td>
           <td>
-            <button class="del-row-btn" (click)="deleteRow(r.id)" title="Remover">✕</button>
+            <button class="del-row-btn" (click)="deleteRow(r.id)" title="Remover"><span class="msi">close</span></button>
           </td>
         </tr>
       }
@@ -73,9 +73,9 @@
 </div>
 
 <div class="pager">
-  <button (click)="changePage(-1)" [disabled]="page() <= 1">‹</button>
+  <button (click)="changePage(-1)" [disabled]="page() <= 1"><span class="msi">chevron_left</span></button>
   <span>{{ pageLabel() }}</span>
-  <button (click)="changePage(1)"  [disabled]="page() >= pages()">›</button>
+  <button (click)="changePage(1)"  [disabled]="page() >= pages()"><span class="msi">chevron_right</span></button>
   <span style="color:var(--muted)">Linhas:</span>
   <select [value]="pageSize()" (change)="changeSize($any($event.target).value)">
     <option value="50">50</option>
@@ -94,6 +94,6 @@
         <span class="tag-menu-dot" [style.background]="t.color"></span>{{ t.label }}
       </div>
     }
-    <div class="tag-menu-item tag-menu-clear" (click)="setTag(tagMenuOpen()!, null)">✕ remover etiqueta</div>
+    <div class="tag-menu-item tag-menu-clear" (click)="setTag(tagMenuOpen()!, null)"><span class="msi">close</span> remover etiqueta</div>
   </div>
 }

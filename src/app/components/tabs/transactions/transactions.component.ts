@@ -89,7 +89,7 @@ export class TransactionsComponent {
     const row = this.store.all().find((r: Transaction) => r.id === id);
     if (!row) return;
     this.store.pushLog({
-      type: 'delete', icon: '🗑',
+      type: 'delete', icon: 'delete',
       title: `Exclusão: "${row.descricao}"`,
       meta: `${this.acctLbl(row)} · ${row.date.toLocaleDateString('pt-BR')} · ${this.store.fBRL(row.valor)}`,
       undo: () => this.store.restoreRow(id),

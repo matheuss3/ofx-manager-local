@@ -9,6 +9,7 @@ interface TransfLine {
   color: string;
   saldo: number;
   valor: number;
+  accountType: AccountType;
 }
 
 @Component({
@@ -19,7 +20,7 @@ interface TransfLine {
     <div class="modal-overlay open"
          (click)="$event.target === $event.currentTarget && fechar.emit()">
       <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
-        <h3>💸 Pagamento multi-banco</h3>
+        <h3><span class="msi">currency_exchange</span> Pagamento multi-banco</h3>
 
         <div class="form-row">
           <div class="form-group">
@@ -60,7 +61,7 @@ interface TransfLine {
 
         @if (bancoPagadorId() && faltante() > 0) {
           <div class="period-warning" style="margin-bottom:.75rem;border-radius:var(--r);display:flex;align-items:flex-start;gap:6px">
-            <span>⚠</span>
+            <span><span class="msi">warning</span></span>
             <span>
               Saldo do banco pagador: <strong>{{ saldoFonte(bancoPagadorId()) | brl }}</strong>.
               Faltam <strong>{{ faltante() | brl }}</strong> — adicione transferências abaixo.
@@ -72,6 +73,7 @@ interface TransfLine {
             @for (linha of transferencias(); track linha.srcId) {
               <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:.4rem .6rem;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
                 <span class="dot" [style.background]="linha.color"></span>
+                <span class="msi" style="font-size:14px;color:var(--muted)">{{ linha.accountType === 'investimento' ? 'trending_up' : 'account_balance' }}</span>
                 <span style="flex:1;font-size:12px;font-weight:500">{{ linha.label }}</span>
                 <span style="font-size:11px;color:var(--muted);white-space:nowrap">
                   saldo: {{ linha.saldo | brl }}
@@ -106,7 +108,8 @@ interface TransfLine {
               <span>Cobertura</span>
               @if (saldoRestante() !== null) {
                 <span [style.color]="saldoRestante()! >= 0 ? 'var(--green)' : 'var(--amber)'">
-                  {{ saldoRestante()! >= 0 ? '✓ suficiente' : '⚠ faltam ' }}
+                  <span class="msi">{{ saldoRestante()! >= 0 ? 'check' : 'warning' }}</span>
+                  {{ saldoRestante()! >= 0 ? 'suficiente' : 'faltam ' }}
                   @if (saldoRestante()! < 0) { {{ saldoRestante()! * -1 | brl }} }
                 </span>
               }
@@ -116,7 +119,7 @@ interface TransfLine {
 
         @if (mostrarAvisoInsuficiente()) {
           <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:.65rem .85rem;font-size:12px;color:var(--red);margin-bottom:.75rem">
-            <strong>⚠ Saldo insuficiente.</strong> Deseja confirmar mesmo assim?
+            <strong><span class="msi">warning</span> Saldo insuficiente.</strong> Deseja confirmar mesmo assim?
             <div style="display:flex;gap:8px;margin-top:.5rem">
               <button class="btn-danger" style="font-size:12px;padding:.3rem .75rem"
                       (click)="confirmarMesmoAssim()">Confirmar mesmo assim</button>
@@ -129,7 +132,7 @@ interface TransfLine {
         <div class="modal-actions">
           <button class="btn-sec" (click)="fechar.emit()">Cancelar</button>
           <button class="btn-primary" [disabled]="!podeSalvar()" (click)="salvar()">
-            ✓ Criar lançamentos
+            <span class="msi">check</span> Criar lançamentos
           </button>
         </div>
       </div>
@@ -165,6 +168,7 @@ export class PagamentoModalComponent {
         srcId: s.id, label: s.label, color: s.color,
         saldo: this.saldoFonte(s.id),
         valor: this.transfMap()[s.id] ?? 0,
+        accountType: s.accountType,
       }))
   );
 
@@ -252,7 +256,7 @@ export class PagamentoModalComponent {
       .filter(l => l.valor > 0).map(l => l.label);
 
     this.store.pushLog({
-      type: 'saldo', icon: '💸',
+      type: 'saldo', icon: 'currency_exchange',
       title: `Pagamento: ${this.descricao()}`,
       meta: `${this.store.fBRL(this.valorTotal())} via ${pag.label}${bancosEnvolvidos.length ? ' + ' + bancosEnvolvidos.join(', ') : ''}`,
       undo: () => rows.forEach(r => this.store.deleteRow(r.id)),

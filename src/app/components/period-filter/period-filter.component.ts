@@ -9,10 +9,10 @@ import { StoreService } from '../../services/store.service';
     @if (store.sources().length) {
       <div class="period-panel">
         <div class="period-header">
-          <span class="period-icon">📅</span>
+          <span class="period-icon"><span class="msi">calendar_month</span></span>
           <strong>Analisar período</strong>
           @if (isActive()) {
-            <span class="period-badge">📌 {{ badgeLabel() }}</span>
+            <span class="period-badge"><span class="msi">push_pin</span> {{ badgeLabel() }}</span>
           }
           <div class="period-controls">
             <div class="form-group" style="flex-direction:row;align-items:center;gap:6px">
@@ -33,7 +33,7 @@ import { StoreService } from '../../services/store.service';
         </div>
         @if (warning()) {
           <div style="font-size:12px;color:var(--amber);padding:.4rem .9rem .5rem;display:flex;align-items:center;gap:6px">
-            <span>⚠</span><span>{{ warning() }}</span>
+            <span><span class="msi">warning</span></span><span>{{ warning() }}</span>
           </div>
         }
       </div>

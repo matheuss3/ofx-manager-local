@@ -177,7 +177,7 @@ export class UploadComponent {
     if (oldColor !== newColor) changes.push(`cor: ${oldColor} → ${newColor}`);
 
     this.store.pushLog({
-      type: 'saldo', icon: '🏷',
+      type: 'saldo', icon: 'sell',
       title: `Conta renomeada: ${newLabel}`,
       meta: changes.join(' · '),
       undo: () => this.store.updateSourceLabel(id, oldLabel, oldColor),
@@ -205,7 +205,7 @@ export class UploadComponent {
     if (oldVal === newVal) { this.showSaldoModal.set(false); return; }
 
     this.store.pushLog({
-      type: 'saldo', icon: '💰',
+      type: 'saldo', icon: 'savings',
       title: `Saldo inicial alterado: ${s.label}`,
       meta: `${this.store.fBRL(oldVal)} → ${this.store.fBRL(newVal)}${this.saldoReason() ? ' · ' + this.saldoReason() : ''}`,
       undo: () => this.store.updateSaldoInicial(srcId, oldVal),
@@ -298,9 +298,9 @@ export class UploadComponent {
     this.store.addSource(src);
 
     this.store.pushLog({
-      type: 'saldo', icon: '🏦',
+      type: 'saldo', icon: 'account_balance',
       title: `Conta criada: ${nome}`,
-      meta: `${this.novaContaTipo() === 'investimento' ? '📈 Investimento' : '🏦 Corrente'} · saldo inicial: ${this.store.fBRL(this.novaContaSaldo())}`,
+      meta: `${this.novaContaTipo() === 'investimento' ? 'Investimento' : 'Corrente'} · saldo inicial: ${this.store.fBRL(this.novaContaSaldo())}`,
       undo: () => this.store.removeSource(src.id),
     });
 

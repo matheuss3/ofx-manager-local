@@ -1,15 +1,15 @@
 <div class="upload-area">
   <div class="upload-header">
-    <h2>📂 Arquivos e fontes</h2>
+    <h2><span class="msi">folder_open</span> Arquivos e fontes</h2>
     <div class="upload-actions">
-      <button class="btn-sec" (click)="fileInput.click()">＋ Adicionar .ofx</button>
-      <button class="btn-sec" (click)="openManualModal()">✏️ Lançamento manual</button>
-      <button class="btn-sec" (click)="openNovaContaModal()">🏦 Nova conta</button>
+      <button class="btn-sec" (click)="fileInput.click()"><span class="msi">add</span> Adicionar .ofx</button>
+      <button class="btn-sec" (click)="openManualModal()"><span class="msi">edit</span> Lançamento manual</button>
+      <button class="btn-sec" (click)="openNovaContaModal()"><span class="msi">account_balance</span> Nova conta</button>
       @if (sources.length) {
-        <button class="btn-sec" (click)="showPagamentoModal.set(true)">💸 Pagamento multi-banco</button>
+        <button class="btn-sec" (click)="showPagamentoModal.set(true)"><span class="msi">currency_exchange</span> Pagamento multi-banco</button>
       }
       @if (sources.length) {
-        <button class="btn-danger" (click)="clearAll()">🗑 Limpar tudo</button>
+        <button class="btn-danger" (click)="clearAll()"><span class="msi">delete</span> Limpar tudo</button>
       }
     </div>
   </div>
@@ -46,8 +46,8 @@
     @if (multiSource) {
       <div class="sel-bar">
         <span>Selecionar:</span>
-        <button class="btn-xs" (click)="selectAll(true)">✓ Todas</button>
-        <button class="btn-xs" (click)="selectAll(false)">✕ Nenhuma</button>
+        <button class="btn-xs" (click)="selectAll(true)"><span class="msi">check</span> Todas</button>
+        <button class="btn-xs" (click)="selectAll(false)"><span class="msi">close</span> Nenhuma</button>
         <span class="sel-count">{{ activeCount }} de {{ sources.length }} contas ativas</span>
       </div>
     }
@@ -67,7 +67,7 @@
         <div class="file-info" [style.opacity]="isHidden(s.id) ? '0.45' : '1'">
           <div class="file-name">
             {{ s.label }}
-            <span class="file-label-tag" (click)="openLabelModal(s.id)">🏷 renomear</span>
+            <span class="file-label-tag" (click)="openLabelModal(s.id)"><span class="msi">sell</span> renomear</span>
             @if (isHidden(s.id)) {
               <span class="badge-oculto">oculto</span>
             }
@@ -83,7 +83,7 @@
           </div>
         </div>
         <div class="file-actions">
-          <button class="icon-btn danger" (click)="removeSource(s.id)" title="Remover">✕</button>
+          <button class="icon-btn danger" (click)="removeSource(s.id)" title="Remover"><span class="msi">close</span></button>
         </div>
       </div>
     }
@@ -95,7 +95,7 @@
   <!-- Saldo panel -->
   @if (sources.length) {
     <div class="saldo-panel">
-      <h4>💰 Saldo inicial das contas</h4>
+      <h4><span class="msi">savings</span> Saldo inicial das contas</h4>
       <p class="saldo-hint">Informe o saldo no início do período para calcular o saldo real ao longo do tempo.</p>
       <div class="saldo-grid">
         @for (s of sources; track s.id) {
@@ -104,13 +104,13 @@
             <label [title]="s.label" style="flex:1">
               {{ s.label }}
               @if (s.ofxHasBalance) {
-                <span style="font-size:10px;color:var(--green);margin-left:4px">✓ OFX</span>
+                <span style="font-size:10px;color:var(--green);margin-left:4px"><span class="msi">check</span> OFX</span>
               }
             </label>
             <span class="saldo-value" [style.color]="s.saldoInicial >= 0 ? 'var(--green)' : 'var(--red)'">
               {{ s.saldoInicial | brl }}
             </span>
-            <button class="saldo-edit-btn" (click)="openSaldoModal(s.id)">✏ editar</button>
+            <button class="saldo-edit-btn" (click)="openSaldoModal(s.id)"><span class="msi">edit</span> editar</button>
           </div>
         }
       </div>
@@ -130,7 +130,7 @@
 @if (showNovaContaModal()) {
   <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showNovaContaModal.set(false)">
     <div class="modal">
-      <h3>🏦 Nova conta</h3>
+      <h3><span class="msi">account_balance</span> Nova conta</h3>
       <div class="form-row s1">
         <div class="form-group">
           <label>Nome da conta *</label>
@@ -173,7 +173,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn-sec" (click)="showNovaContaModal.set(false)">Cancelar</button>
-        <button class="btn-primary" (click)="criarNovaConta()">✓ Criar conta</button>
+        <button class="btn-primary" (click)="criarNovaConta()"><span class="msi">check</span> Criar conta</button>
       </div>
     </div>
   </div>
@@ -182,7 +182,7 @@
 @if (showLabelModal()) {
   <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showLabelModal.set(false)">
     <div class="modal">
-      <h3>🏷️ Renomear conta</h3>
+      <h3><span class="msi">sell</span> Renomear conta</h3>
       <div class="form-row s1">
         <div class="form-group">
           <label>Nome / label</label>
@@ -231,7 +231,7 @@
 @if (showSaldoModal()) {
   <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showSaldoModal.set(false)">
     <div class="modal">
-      <h3>💰 Alterar saldo inicial</h3>
+      <h3><span class="msi">savings</span> Alterar saldo inicial</h3>
       <p class="modal-desc">{{ saldoDesc() }}</p>
       <div class="form-row s1">
         <div class="form-group">
@@ -257,7 +257,7 @@
 @if (showManualModal()) {
   <div class="modal-overlay open" (click)="$event.target === $event.currentTarget && showManualModal.set(false)">
     <div class="modal">
-      <h3>✏️ Lançamento manual</h3>
+      <h3><span class="msi">edit</span> Lançamento manual</h3>
       <div class="form-row">
         <div class="form-group">
           <label>Data *</label>
@@ -275,9 +275,9 @@
         <div class="form-group">
           <label>Conta *</label>
           <select [value]="manualConta()" (change)="manualConta.set($any($event.target).value)">
-            <option value="__new">＋ Nova conta (digitar abaixo)</option>
+            <option value="__new">+ Nova conta (digitar abaixo)</option>
             @for (s of sources; track s.id) {
-              <option [value]="s.id">{{ s.label }}</option>
+              <option [value]="s.id">{{ s.accountType === 'investimento' ? '📈' : '🏦' }} {{ s.label }}</option>
             }
           </select>
         </div>

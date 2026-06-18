@@ -170,7 +170,7 @@ tbody tr:hover td{background:var(--hover-bg)}
 
 /* ── History log ── */
 .log-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:1.25rem;margin-top:1.25rem}
-.log-toggle{width:100%;padding:.7rem 1rem;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:9px;text-align:left;font-family:inherit}
+.log-toggle{width:100%;padding:.7rem 1rem;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:9px;text-align:left;font-family:inherit;color:var(--text)}
 .log-toggle:hover{background:var(--hover-bg)}
 .log-toggle h3{font-size:13px;font-weight:600;flex:1;color:var(--text)}
 .log-chevron{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0}
@@ -241,3 +241,25 @@ footer{text-align:center;padding:1rem;font-size:12px;color:var(--muted);border-t
 .vis-toggle input:checked~.vis-box{background:var(--blue);border-color:var(--blue)}
 .vis-toggle input:checked~.vis-box::after{content:'✓';color:#fff;font-size:11px;font-weight:700;line-height:1}
 .vis-toggle input:disabled~.vis-box{opacity:.4;cursor:not-allowed}
+/* Material Symbols base */
+.msi{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:18px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;vertical-align:middle;-webkit-font-smoothing:antialiased;color:inherit}
+.msi.sm{font-size:14px}
+.msi.md{font-size:18px}
+.msi.lg{font-size:22px}
+.msi.xl{font-size:28px}
+
+/* Icon + text alignment in buttons and inline elements */
+.btn-sec,.btn-primary,.btn-danger,.btn-xs{display:inline-flex;align-items:center;gap:5px}
+.btn-sec .msi,.btn-primary .msi,.btn-danger .msi,.btn-xs .msi{font-size:16px}
+h2 .msi,h3 .msi,h4 .msi{font-size:18px;vertical-align:-3px;margin-right:2px}
+.icon-btn .msi,.del-row-btn .msi{font-size:15px}
+.exp-btn{display:inline-flex;align-items:center}
+.exp-btn .msi{font-size:16px}
+.tag-menu-item .msi{font-size:14px;margin-right:2px}
+.file-label-tag .msi{font-size:12px;vertical-align:-1px}
+.saldo-edit-btn .msi{font-size:13px}
+.log-icon.msi{font-size:18px;flex-shrink:0}
+.log-undo .msi{font-size:14px}
+.theme-btn .msi{font-size:20px}
+.period-icon .msi{font-size:16px}
+.period-badge .msi{font-size:12px;vertical-align:-1px}

@@ -44,6 +44,28 @@ export class OfxParserService {
     const blocks = text.match(/<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi) ?? [];
     const rows: Omit<Transaction, 'source'>[] = [];
 
+    // Parses OFX TRNAMT values robustly. Standard OFX uses '.' as decimal
+    // separator, but some Brazilian banks (confirmed: Santander) emit values
+    // using ',' as decimal separator, and occasionally insert a stray '.'
+    // as a malformed thousands separator (e.g. "8730.251,40" instead of
+    // "8.730.251,40" or "8730251,40"). This parser finds the actual decimal
+    // separator (the LAST comma or dot in the string) and strips any other
+    // dots/commas before it, treating them as thousands separators.
+    const parseAmount = (raw: string): number => {
+      const s = raw.trim();
+      const lastComma = s.lastIndexOf(',');
+      const lastDot   = s.lastIndexOf('.');
+      const decimalIdx = Math.max(lastComma, lastDot);
+      if (decimalIdx === -1) return parseFloat(s) || 0;
+
+      let intPart = s.slice(0, decimalIdx).replace(/[.,]/g, '');
+      const decPart = s.slice(decimalIdx + 1).replace(/[^0-9]/g, '');
+      const sign = intPart.startsWith('-') ? '-' : '';
+      intPart = intPart.replace('-', '');
+      const n = parseFloat(`${sign}${intPart}.${decPart}`);
+      return isNaN(n) ? 0 : n;
+    };
+
     for (const b of blocks) {
       const g = (tag: string) => {
         const m = b.match(new RegExp(`<${tag}>([^<\n\r]+)`));
@@ -62,7 +84,7 @@ export class OfxParserService {
         id: g('FITID') || `ofx-${Math.random()}`,
         date,
         tipo: g('TRNTYPE'),
-        valor: parseFloat(amtRaw),
+        valor: parseAmount(amtRaw),
         descricao: g('MEMO') || g('NAME') || '(sem descrição)',
         isManual: false,
         linkedSourceId: null,
